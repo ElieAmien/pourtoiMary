@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Lettre Secrète</title>
+    <style>
+        /* Reset de base */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
+            background-color: transparent;
+            overflow-x: hidden; /* Évite les bugs de défilement avec le bouton qui bouge */
+        }
+
+        /* Vidéo d'arrière-plan */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        /* Conteneur principal */
+        .container {
+            width: 95%; 
+            max-width: 1200px; 
+            margin: 0 auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Style des images (lettres) */
+        .lettre-img {
+            width: 100%; 
+            height: auto; 
+            display: block;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            opacity: 0.88;
+            mix-blend-mode: multiply;
+        }
+
+        /* Zone de saisie du code secret (Thème Amoureux) */
+        .verrou-section {
+            width: 100%;
+            max-width: 500px; 
+            box-sizing: border-box;
+            padding: 30px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(255, 105, 180, 0.3); /* Ombre rose subtile */
+            text-align: center;
+            background: url('fond_carre_code.jpg') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #ff69b4;
+        }
+
+        .verrou-section::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 240, 245, 0.9); /* Fond transparent teinté rose clair */
+            z-index: 1;
+        }
+
+        .verrou-section-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .verrou-section p {
+            margin-top: 0;
+            color: #d81b60; /* Texte rose foncé */
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column; 
+            gap: 12px;
+            align-items: center;
+        }
+
+        .verrou-section input {
+            padding: 12px;
+            font-size: 16px; 
+            border: 2px solid #ff8da1;
+            border-radius: 20px; /* Arrondi plus doux */
+            outline: none;
+            width: 90%;
+            max-width: 300px;
+            text-align: center;
+            background-color: #fff;
+        }
+
+        /* Bouton code ROSE thème amoureux */
+        .verrou-section button {
+            padding: 12px 30px;
+            font-size: 16px;
+            background-color: #ff69b4; /* Rose Bonbon */
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s, transform 0.2s;
+            width: 90%;
+            max-width: 300px;
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.4);
+        }
+
+        .verrou-section button:hover {
+            background-color: #e0529c;
+            transform: scale(1.03);
+        }
+
+        #error-message {
+            color: #d81b60;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* Section cachée (Image 2 + Image 3 + Question) */
+        #partie-secrete {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            gap: 25px; 
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        #partie-secrete.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* --- SECTION QUESTION FINALE --- */
+        .question-section {
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin: 40px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+        }
+
+        .question-section h2 {
+            color: #fff;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+            margin-bottom: 30px;
+        }
+
+        /* Zone contenant les deux boutons d'excuse */
+        .btn-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            min-height: 150px; /* Espace nécessaire pour que le bouton puisse bouger un peu */
+        }
+
+        /* Style commun pour les boutons Oui et Non avec image de fond */
+        .choice-btn {
+            width: 140px;
+            height: 60px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.2s;
+        }
+
+        .choice-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Boutons personnalisés avec ton image */
+        #btn-oui {
+            background-image: url("C:\Users\Hp\Desktop\Pour Mary\OUI.png"); /* À remplacer */
+        }
+
+        #btn-non {
+            background-image: url("C:\Users\Hp\Desktop\Pour Mary\NON.png"); /* À remplacer */
+            position: absolute; /* Crucial pour pouvoir le déplacer en JavaScript */
+            z-index: 10;
+        }
+
+        /* Section de la toute dernière image finale (cachée au début) */
+        #fin-histoire {
+            display: none;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+
+        #fin-histoire.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        @media (min-width: 600px) {
+            .input-group {
+                flex-direction: row; 
+                justify-content: center;
+            }
+            .verrou-section input {
+                width: 60%;
+            }
+            .verrou-section button {
+                width: auto;
+            }
+            .question-section h2 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Vidéo en arrière-plan -->
+    <video class="video-background" autoplay loop muted playsinline preload="auto">
+        <source src="c:\Users\Hp\Desktop\Pour Mary\Mary.mp4" type="video/mp4">
+    </video>
+
+    <div class="container">
+        
+        <!-- Première image de la lettre -->
+        <img src="C:\Users\Hp\Desktop\Pour Mary\1.png" alt="Première partie de la lettre" class="lettre-img">
+
+        <!-- Zone du code secret (Rose Amoureux) -->
+        <div class="verrou-section" id="lockZone">
+            <div class="verrou-section-content">
+                <p>Entres le code secret pour débloquer la suite. Indice, les 4 premiers mots de Coming Up Roses :</p>
+                <div class="input-group">
+                    <input type="text" id="codeSaisi" placeholder="Code secret..." autocomplete="off">
+                    <button onclick="verifierCode()">Valider</button>
+                </div>
+                <div id="error-message">Code incorrect. Réessayez.</div>
+            </div>
+        </div>
+
+        <!-- Deuxième partie (Contient l'image 2, l'image 3 et le questionnaire) -->
+        <div id="partie-secrete">
+            <img src="C:\Users\Hp\Desktop\Pour Mary\2.png" alt="Deuxième partie de la lettre" class="lettre-img">
+            <img src="C:\Users\Hp\Desktop\Pour Mary\3.png" alt="Troisième partie de la lettre" class="lettre-img">
+            
+            <!-- Zone interactive finale : "Tu acceptes mes excuses ?" -->
+            <div class="question-section" id="questionZone">
+                <h2>Tu acceptes mes excuses ? 🥺</h2>
+                <div class="btn-wrapper" id="wrapper">
+                    <button class="choice-btn" id="btn-oui" onclick="accepterExcuses()">OUIII !</button>
+                    <button class="choice-btn" id="btn-non">Non</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dernière partie : Affichée uniquement après avoir cliqué sur OUIII -->
+        <div id="fin-histoire">
+            <img src="C:\Users\Hp\Desktop\Pour Mary\4.png" alt="Dernière partie de la lettre" class="lettre-img">
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. GESTION DU CODE DE VERROUILLAGE ---
+        function verifierCode() {
+            const codeCorrect = "Tell me your fears"; 
+            const winterSaisie = document.getElementById("codeSaisi").value.trim();
+            const errorMsg = document.getElementById("error-message");
+            const partieSecrete = document.getElementById("partie-secrete");
+            const lockZone = document.getElementById("lockZone");
+
+            if (winterSaisie.toLowerCase() === codeCorrect.toLowerCase()) {
+                errorMsg.style.display = "none";
+                lockZone.style.display = "none"; 
+                partieSecrete.style.display = "flex"; 
+                
+                setTimeout(() => {
+                    partieSecrete.classList.add("visible");
+                    partieSecrete.scrollIntoView({ behavior: 'smooth' });
+                    initialiserBoutonNon(); // On place correctement le bouton Non dès qu'il apparaît
+                }, 50);
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+        document.getElementById("codeSaisi").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                verifierCode();
+            }
+        });
+
+        // --- 2. LE BOUTON "NON" QUI FUIT (PC + TÉLÉPHONE) ---
+        const btnNon = document.getElementById('btn-non');
+        const wrapper = document.getElementById('wrapper');
+
+        function initialiserBoutonNon() {
+            // Positionne le bouton non à sa place initiale relative par défaut
+            btnNon.style.left = "calc(50% + 40px)"; 
+        }
+
+        function fuyezBouton(e) {
+            // Empêche le comportement par défaut si c'est un tapotement tactile
+            if(e.type === 'touchstart') e.preventDefault();
+
+            // Calcule une position aléatoire dans la zone visible de l'écran (pour ne pas qu'il sorte de la page)
+            const padding = 20;
+            const maxX = window.innerWidth - btnNon.offsetWidth - padding;
+            const maxY = window.innerHeight - btnNon.offsetHeight - padding;
+
+            // Génère des coordonnées aléatoires
+            let randomX = Math.floor(Math.random() * maxX);
+            let randomY = Math.floor(Math.random() * maxY);
+
+            // On extrait la position absolue par rapport à la page
+            btnNon.style.position = 'fixed';
+            btnNon.style.left = randomX + 'px';
+            btnNon.style.top = randomY + 'px';
+        }
+
+        // Détection du survol de souris (PC)
+        btnNon.addEventListener('mouseover', fuyezBouton);
+        // Détection du touché de doigt (Téléphone)
+        btnNon.addEventListener('touchstart', fuyezBouton);
+
+
+        // --- 3. CLIC SUR LE OUI / DÉBLOCAGE DE LA 4e IMAGE ---
+        function accepterExcuses() {
+            const questionZone = document.getElementById('questionZone');
+            const finHistoire = document.getElementById('fin-histoire');
+
+            // Cache la zone de question
+            questionZone.style.display = 'none';
+
+            // Affiche la 4e et dernière image
+            finHistoire.style.display = 'block';
+
+            setTimeout(() => {
+                finHistoire.classList.add('visible');
+                finHistoire.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+        }
+
+        // Relance forcée de la vidéo
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.querySelector('.video-background');
+            video.play().catch(err => console.log("Vidéo en attente d'interaction"));
+        });
+    </script>
+
+</body>
+</html>
